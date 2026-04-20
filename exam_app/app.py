@@ -87,7 +87,7 @@ def _main(subject: str) -> None:
     if initial_code is None:
         initial_code = problem.problem_code
 
-    st.markdown("**코드를 작성하세요** (빈칸(`### !!!코드를 작성하세요!!!`)을 채워 넣고 제출):")
+    st.markdown("**코드를 작성하세요** (빈칸(`## Write Answer`)을 채워 넣고 제출):")
     user_code = st.text_area(
         label="code editor",
         value=initial_code,

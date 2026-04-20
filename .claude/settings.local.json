@@ -3,7 +3,8 @@
     "allow": [
       "Bash(awk '{print NR\": \"length\\($0\\)}' 'C:\\\\Workspace\\\\exam\\\\ai_exam\\\\llm_source.ipynb')",
       "Bash(sort -t: -k2 -n)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(pip install *)"
     ]
   }
 }

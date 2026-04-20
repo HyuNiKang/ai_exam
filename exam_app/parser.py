@@ -32,11 +32,13 @@ HEADING_RE = re.compile(
     re.MULTILINE,
 )
 
-# Inline solution marker used in data/ondevice solution code cells:
-#   `### <answer code> ### !!!!!!!!!!!!코드를 작성하세요!!!!!!!!!!!!`
-# Captures the answer between the two `###` delimiters.
+# Inline solution marker used in data/ondevice/llm solution code cells:
+#   `### <answer code> ## Write Answer`         (data, llm)
+#   `### <answer code> ### ## Write Answer`     (ondevice)
+# Captures the answer between the opening `###` and the `## Write Answer`
+# marker, tolerating an optional closing `###` before the marker.
 INLINE_SOLUTION_RE = re.compile(
-    r"###\s*(.+?)\s*###\s*!+\s*코드를\s*작성하세요\s*!+",
+    r"###\s*(.+?)\s*(?:###\s*)?##\s*Write\s*Answer",
     re.DOTALL,
 )
 
@@ -100,10 +102,10 @@ def _markdown_before_code(cells) -> str:
 
 
 def _clean_solution_code(raw_code: str) -> str:
-    """Replace inline `### answer ### !!!코드를 작성하세요!!!` markers with the answer.
+    """Replace inline `### answer ## Write Answer` markers with the answer.
 
     - Vision solutions have clean code and no markers → unchanged.
-    - Data/ondevice solutions embed the answer between ### delimiters → extracted.
+    - Data/ondevice/llm solutions embed the answer after `###` → extracted.
     """
     return INLINE_SOLUTION_RE.sub(r"\1", raw_code)
 
