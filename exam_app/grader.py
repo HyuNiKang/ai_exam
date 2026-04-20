@@ -14,15 +14,16 @@ class GradeResult:
 
 
 def _strip_placeholder_comments(code: str) -> str:
-    """Remove the `### !!!!!!!!!!!!코드를 작성하세요!!!!!!!!!!!!` marker lines.
+    """Remove whole-line `## Write Answer` placeholder markers.
 
-    These markers may appear as whole-line comments or inline after a value.
-    If the user submits the problem unchanged we want them to fail grading (not
-    parse error), so only strip when the line has no other content.
+    The marker is a valid Python comment so `ast.parse` tolerates it, but we
+    drop whole-line occurrences defensively. Inline markers left behind (e.g.
+    `x = ## Write Answer`) would produce incomplete statements and still
+    raise SyntaxError — which is the desired behavior for unfilled answers.
     """
     cleaned = []
     for line in code.splitlines():
-        if re.fullmatch(r"\s*###\s*!+\s*코드를\s*작성하세요\s*!+\s*", line):
+        if re.fullmatch(r"\s*##\s*Write\s*Answer\s*", line):
             continue
         cleaned.append(line)
     return "\n".join(cleaned)
@@ -81,7 +82,7 @@ def grade(user_code: str, solution_code: str) -> GradeResult:
 if __name__ == "__main__":
     from parser import load_subject
 
-    for subject in ("vision", "data", "ondevice"):
+    for subject in ("vision", "data", "ondevice", "llm"):
         problems = load_subject(subject)
         print(f"\n=== {subject} ===")
         for p in problems[:3]:

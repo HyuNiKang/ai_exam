@@ -50,9 +50,15 @@ def _sidebar(subjects: list[str]) -> str:
             sess.move_cursor(subject, +1, total)
             st.rerun()
 
-    if st.sidebar.button("🔀 다시 섞기", use_container_width=True):
-        sess.reshuffle(subject, problems)
-        st.rerun()
+    col_seq, col_shuffle = st.sidebar.columns(2)
+    with col_seq:
+        if st.button("🔢 순서대로", use_container_width=True):
+            sess.reset_order(subject, problems)
+            st.rerun()
+    with col_shuffle:
+        if st.button("🔀 다시 섞기", use_container_width=True):
+            sess.reshuffle(subject, problems)
+            st.rerun()
 
     with st.sidebar.expander("문제 바로가기"):
         order = sess.get_order(subject)
@@ -81,7 +87,7 @@ def _main(subject: str) -> None:
     if initial_code is None:
         initial_code = problem.problem_code
 
-    st.markdown("**코드를 작성하세요** (빈칸(`### !!!코드를 작성하세요!!!`)을 채워 넣고 제출):")
+    st.markdown("**코드를 작성하세요** (빈칸(`## Write Answer`)을 채워 넣고 제출):")
     user_code = st.text_area(
         label="code editor",
         value=initial_code,
