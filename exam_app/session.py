@@ -11,14 +11,18 @@ def _init_subject(subject: str, problems: list[Problem]) -> None:
     """Create session entries for a subject the first time it's selected."""
     order_key = f"order::{subject}"
     if order_key not in st.session_state:
-        st.session_state[order_key] = _new_order(problems)
+        st.session_state[order_key] = _sequential_order(problems)
         st.session_state[f"cursor::{subject}"] = 0
         st.session_state[f"answers::{subject}"] = {}
         st.session_state[f"results::{subject}"] = {}
 
 
-def _new_order(problems: list[Problem]) -> list[int]:
-    order = [p.number for p in problems]
+def _sequential_order(problems: list[Problem]) -> list[int]:
+    return [p.number for p in problems]
+
+
+def _shuffled_order(problems: list[Problem]) -> list[int]:
+    order = _sequential_order(problems)
     random.shuffle(order)
     return order
 
@@ -28,7 +32,12 @@ def ensure_subject(subject: str, problems: list[Problem]) -> None:
 
 
 def reshuffle(subject: str, problems: list[Problem]) -> None:
-    st.session_state[f"order::{subject}"] = _new_order(problems)
+    st.session_state[f"order::{subject}"] = _shuffled_order(problems)
+    st.session_state[f"cursor::{subject}"] = 0
+
+
+def reset_order(subject: str, problems: list[Problem]) -> None:
+    st.session_state[f"order::{subject}"] = _sequential_order(problems)
     st.session_state[f"cursor::{subject}"] = 0
 
 

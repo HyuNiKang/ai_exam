@@ -14,12 +14,14 @@ SUBJECTS = {
     "vision": ("vision_practice.ipynb", "vision_practice_solution.ipynb"),
     "data": ("data_practice.ipynb", "data_practice_solution.ipynb"),
     "ondevice": ("ondevice_practice.ipynb", "ondevice_practice_solution.ipynb"),
+    "llm": ("llm_practice.ipynb", "llm_practice_solution.ipynb"),
 }
 
 SUBJECT_LABELS = {
     "vision": "Vision",
     "data": "Data / Time Series",
     "ondevice": "On-Device AI",
+    "llm": "LLM",
 }
 
 # Match problem headings (level 2 only). Keyword can be:

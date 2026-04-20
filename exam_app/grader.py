@@ -81,7 +81,7 @@ def grade(user_code: str, solution_code: str) -> GradeResult:
 if __name__ == "__main__":
     from parser import load_subject
 
-    for subject in ("vision", "data", "ondevice"):
+    for subject in ("vision", "data", "ondevice", "llm"):
         problems = load_subject(subject)
         print(f"\n=== {subject} ===")
         for p in problems[:3]:

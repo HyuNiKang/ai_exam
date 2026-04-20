@@ -50,9 +50,15 @@ def _sidebar(subjects: list[str]) -> str:
             sess.move_cursor(subject, +1, total)
             st.rerun()
 
-    if st.sidebar.button("🔀 다시 섞기", use_container_width=True):
-        sess.reshuffle(subject, problems)
-        st.rerun()
+    col_seq, col_shuffle = st.sidebar.columns(2)
+    with col_seq:
+        if st.button("🔢 순서대로", use_container_width=True):
+            sess.reset_order(subject, problems)
+            st.rerun()
+    with col_shuffle:
+        if st.button("🔀 다시 섞기", use_container_width=True):
+            sess.reshuffle(subject, problems)
+            st.rerun()
 
     with st.sidebar.expander("문제 바로가기"):
         order = sess.get_order(subject)
