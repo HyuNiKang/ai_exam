@@ -18,6 +18,7 @@ SUBJECTS = {
 }
 
 SUBJECT_LABELS = {
+    "total": "종합 (전체 영역)",
     "vision": "Vision",
     "data": "Data / Time Series",
     "ondevice": "On-Device AI",
@@ -32,24 +33,43 @@ HEADING_RE = re.compile(
     re.MULTILINE,
 )
 
-# Inline solution marker used in data/ondevice/llm solution code cells:
-#   `### <answer code> ## Write Answer`         (data, llm)
-#   `### <answer code> ### ## Write Answer`     (ondevice)
-# Captures the answer between the opening `###` and the `## Write Answer`
-# marker, tolerating an optional closing `###` before the marker.
+# Inline solution marker used in solution code cells:
+#   `### <answer code> ### 작성 필요 ###`     (신규 표준)
+#   `### <answer code> ## Write Answer`         (기존 레거시)
+#   `### <answer code> ### ## Write Answer`     (ondevice 레거시)
 INLINE_SOLUTION_RE = re.compile(
-    r"###\s*(.+?)\s*(?:###\s*)?##\s*Write\s*Answer",
+    r"###\s*(.+?)\s*(?:###\s*)?(?:###\s*작성\s*필요\s*###|##\s*Write\s*Answer)",
     re.DOTALL,
 )
 
 
 @dataclass
 class Problem:
+    id: str
+    subject: str
+    subject_label: str
     number: int
     title: str
+    question: str
+    requirements: str
     problem_code: str
     solution_code: str
     explanation: str
+
+
+def _parse_sections(text: str, fallback_title: str = "") -> tuple[str, str]:
+    """[문제] 와 [요구사항] 영역을 파싱합니다. 태그가 없으면 텍스트 전체를 문제로 취급합니다."""
+    text_clean = text.strip()
+    q_match = re.search(r"\[문제\]\s*(.*?)(?=\[요구사항\]|\Z)", text_clean, re.DOTALL)
+    r_match = re.search(r"\[요구사항\]\s*(.*)", text_clean, re.DOTALL)
+
+    question = q_match.group(1).strip() if q_match else ""
+    requirements = r_match.group(1).strip() if r_match else ""
+
+    if not question and not requirements:
+        question = text_clean or fallback_title
+
+    return question, requirements
 
 
 @dataclass
@@ -111,6 +131,13 @@ def _clean_solution_code(raw_code: str) -> str:
 
 
 def load_subject(subject: str) -> list[Problem]:
+    if subject == "total":
+        # 4개 전 과목의 문제를 합쳐서 반환
+        total_problems: list[Problem] = []
+        for s in ("vision", "data", "ondevice", "llm"):
+            total_problems.extend(load_subject(s))
+        return total_problems
+
     practice_name, solution_name = SUBJECTS[subject]
     practice_nb = nbformat.read(PRACTICE_DIR / practice_name, as_version=4)
     solution_nb = nbformat.read(SOLUTION_DIR / solution_name, as_version=4)
@@ -132,6 +159,10 @@ def load_subject(subject: str) -> list[Problem]:
         solution_code_raw = _first_code(sg.cells)
         solution_code = _clean_solution_code(solution_code_raw)
 
+        # [문제], [요구사항] 파싱
+        combined_intro = pg.intro_md or ""
+        question, requirements = _parse_sections(combined_intro, fallback_title=title)
+
         explanation_parts = []
         if sg.intro_md:
             explanation_parts.append(sg.intro_md)
@@ -140,10 +171,18 @@ def load_subject(subject: str) -> list[Problem]:
             explanation_parts.append(between)
         explanation = "\n\n".join(explanation_parts).strip()
 
+        problem_id = f"{subject}_{num}"
+        label = SUBJECT_LABELS.get(subject, subject.upper())
+
         problems.append(
             Problem(
+                id=problem_id,
+                subject=subject,
+                subject_label=label,
                 number=num,
                 title=title,
+                question=question,
+                requirements=requirements,
                 problem_code=problem_code,
                 solution_code=solution_code,
                 explanation=explanation,

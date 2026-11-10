@@ -50,6 +50,10 @@ htmlcov/
 *.swo
 *~
 
+# Scratch & temporary test files
+scratch/
+
+
 # Operating System files
 .DS_Store
 Thumbs.db

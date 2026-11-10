@@ -14,16 +14,18 @@ class GradeResult:
 
 
 def _strip_placeholder_comments(code: str) -> str:
-    """Remove whole-line `## Write Answer` placeholder markers.
+    """Remove whole-line placeholder and restriction markers.
 
-    The marker is a valid Python comment so `ast.parse` tolerates it, but we
-    drop whole-line occurrences defensively. Inline markers left behind (e.g.
-    `x = ## Write Answer`) would produce incomplete statements and still
-    raise SyntaxError — which is the desired behavior for unfilled answers.
+    - `### 작성 필요 ###`
+    - `### 공개 제한 ###` / `# ### 공개 제한 ###`
+    - `## Write Answer` / `# ## Write Answer`
     """
     cleaned = []
+    pattern = re.compile(
+        r"^\s*(?:#\s*)?(?:###\s*작성\s*필요\s*###|###\s*공개\s*제한\s*###|##\s*Write\s*Answer)\s*$"
+    )
     for line in code.splitlines():
-        if re.fullmatch(r"\s*##\s*Write\s*Answer\s*", line):
+        if pattern.fullmatch(line):
             continue
         cleaned.append(line)
     return "\n".join(cleaned)
