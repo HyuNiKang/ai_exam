@@ -170,6 +170,13 @@ def load_subject(subject: str) -> list[Problem]:
         if between:
             explanation_parts.append(between)
         explanation = "\n\n".join(explanation_parts).strip()
+        # 해설 끝부분에 중복 삽입된 문제/Problem 서브헤딩 제거
+        explanation = re.sub(
+            r"\n+###\s+(?:Problem|문제)\s+\d+[^\n]*\s*$",
+            "",
+            explanation,
+            flags=re.MULTILINE,
+        ).strip()
 
         problem_id = f"{subject}_{num}"
         label = SUBJECT_LABELS.get(subject, subject.upper())

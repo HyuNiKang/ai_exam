@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import difflib
 import html
 import re
 import streamlit as st
@@ -44,6 +45,7 @@ st.markdown(
         border: 1px solid #f87171 !important;
         font-family: 'Consolas', monospace !important;
         letter-spacing: -0.2px;
+        white-space: nowrap !important;
     }
     /* 공개 제한 뱃지 스타일 */
     .restriction-badge-gray {
@@ -149,6 +151,25 @@ def _analyze_blanks(problem_code: str, user_code: str) -> dict:
         "lines": blank_lines,
         "remaining": remaining,
     }
+
+
+def _match_blank_solutions(problem_code: str, solution_code: str) -> list[tuple[int, str, str]]:
+    """문제 코드의 ### 작성 필요 ### 라인과 정답 코드의 대응 라인을 1:1 매칭합니다."""
+    p_lines = problem_code.splitlines()
+    s_lines = solution_code.splitlines()
+    sm = difflib.SequenceMatcher(None, p_lines, s_lines)
+    pattern = re.compile(r"###\s*작성\s*필요\s*###|##\s*Write\s*Answer")
+
+    matches: list[tuple[int, str, str]] = []
+    for tag, i1, i2, j1, j2 in sm.get_opcodes():
+        if tag in ("replace", "equal"):
+            for idx in range(i1, i2):
+                if pattern.search(p_lines[idx]):
+                    offset = idx - i1
+                    j_idx = min(j1 + offset, j2 - 1) if j2 > j1 else -1
+                    sol_line = s_lines[j_idx].strip() if j_idx >= 0 else ""
+                    matches.append((idx + 1, p_lines[idx].strip(), sol_line))
+    return matches
 
 
 def _sidebar(subject_keys: list[str]) -> tuple[str, bool]:
@@ -420,22 +441,67 @@ def _main(subject: str, split_view: bool) -> None:
 
     # 채점 결과 출력
     result = sess.get_result(subject, problem.id)
+    is_failed = False
     if result is not None:
         if result.status == "correct":
             st.success("🎉 정답입니다! 축하합니다.")
         elif result.status == "wrong":
-            st.error("❌ 정답과 일치하지 않습니다.")
+            is_failed = True
+            st.error("❌ 정답과 일치하지 않습니다. 아래 [정답 & 핵심 개념 해설 보기]에서 빈칸별 출제 포인트와 원리를 확인하세요.")
             if result.diff:
                 with st.expander("내 답안 vs 정답 diff 보기", expanded=True):
                     st.code(result.diff, language="diff")
         elif result.status == "syntax_error":
+            is_failed = True
             st.warning(f"⚠️ {result.message}")
 
-    with st.expander("📖 정답 & 핵심 개념 해설 보기", expanded=False):
+    with st.expander("📖 정답 & 핵심 개념 해설 보기", expanded=is_failed):
+        # 1) 빈칸별 정답 매핑 요약표
+        blank_sols = _match_blank_solutions(problem.problem_code, problem.solution_code)
+        if blank_sols:
+            st.markdown("#### 🎯 `### 작성 필요 ###` 빈칸별 정답 대조")
+            sol_rows = []
+            for ln, p_snip, s_snip in blank_sols:
+                p_esc = blank_pattern.sub(
+                    '<span class="blank-badge-red">### 작성 필요 ###</span>',
+                    html.escape(p_snip),
+                )
+                s_esc = html.escape(s_snip)
+                sol_rows.append(
+                    f'<tr>'
+                    f'<td style="padding: 6px 10px; font-weight: bold; color: #475569; border-bottom: 1px solid #e2e8f0; text-align: center; width: 70px;">Line {ln}</td>'
+                    f'<td style="padding: 6px 10px; font-family: Consolas, monospace; font-size: 0.88em; border-bottom: 1px solid #e2e8f0; background-color: #fff5f5;">{p_esc}</td>'
+                    f'<td style="padding: 6px 10px; font-family: Consolas, monospace; font-size: 0.88em; font-weight: 700; color: #166534; border-bottom: 1px solid #e2e8f0; background-color: #f0fdf4;">{s_esc}</td>'
+                    f'</tr>'
+                )
+            st.markdown(
+                f"""
+                <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; margin-bottom: 14px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                        <thead>
+                            <tr style="background-color: #f1f5f9; color: #334155; font-weight: bold;">
+                                <th style="padding: 6px 10px; width: 70px; text-align: center;">위치</th>
+                                <th style="padding: 6px 10px; text-align: left;">문제 빈칸</th>
+                                <th style="padding: 6px 10px; text-align: left;">정답 코드</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {''.join(sol_rows)}
+                        </tbody>
+                    </table>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        # 2) 핵심 원리 & 출제 포인트 설명
         if problem.explanation:
+            st.markdown("#### 📚 핵심 원리 & 출제 포인트 해설")
             st.markdown(problem.explanation)
             st.markdown("---")
-        st.markdown("**정답 코드:**")
+
+        # 3) 전체 완성 정답 코드
+        st.markdown("#### ✅ 전체 정답 코드")
         st.code(problem.solution_code, language="python")
 
 
