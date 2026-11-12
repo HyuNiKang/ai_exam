@@ -16,8 +16,7 @@ from pathlib import Path
 
 # Match both new and legacy solution inline markers
 INLINE_SOLUTION_RE = re.compile(
-    r"###\s*(.+?)\s*(?:###\s*)?(?:###\s*작성\s*필요\s*###|##\s*Write\s*Answer)",
-    re.DOTALL,
+    r"###(?!\s*공개\s*제한)\s*([^\n]+?)\s*(?:###\s*)?(?:###\s*작성\s*필요\s*###|##\s*Write\s*Answer)"
 )
 HEADING_RE = re.compile(
     r"^\s*##\s+[^\n]*?(?:문제|Problem|개념)\s+(\d+)\.?\s*(.*?)\s*$",

@@ -8,15 +8,15 @@ import streamlit as st
 if TYPE_CHECKING:
     from parser import Problem
 
-TEST_PROBLEM_COUNT = 10
+TEST_PROBLEM_COUNT = 12
 
 
 def _pick_balanced_total_sample(problems: list[Problem], count: int = TEST_PROBLEM_COUNT) -> list[str]:
-    """4개 영역(Vision, Data, On-Device, LLM)에서 골고루 랜덤으로 총 count(기본 10)개를 선택합니다.
+    """5개 영역(Vision, Data, On-Device, LLM, RAG)에서 골고루 랜덤으로 총 count(기본 12)개를 선택합니다.
 
-    - 기본 배분: 4개 과목에서 각 2문제씩 추출 (8문제)
-    - 추가 배분: 4개 과목 중 랜덤 2개 과목에서 각 1문제씩 추가 추출 (총 10문제)
-    - 최종 10문제를 셔플하여 순서가 고르게 섞이도록 반환
+    - 기본 배분: 5개 과목에서 각 2문제씩 추출 (10문제)
+    - 추가 배분: 5개 과목 중 랜덤 2개 과목에서 각 1문제씩 추가 추출 (총 12문제)
+    - 최종 12문제를 셔플하여 순서가 고르게 섞이도록 반환
     """
     by_subj: dict[str, list[Problem]] = {}
     for p in problems:

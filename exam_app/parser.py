@@ -15,6 +15,7 @@ SUBJECTS = {
     "data": ("data_practice.ipynb", "data_practice_solution.ipynb"),
     "ondevice": ("ondevice_practice.ipynb", "ondevice_practice_solution.ipynb"),
     "llm": ("llm_practice.ipynb", "llm_practice_solution.ipynb"),
+    "rag": ("rag_practice.ipynb", "rag_practice_solution.ipynb"),
 }
 
 SUBJECT_LABELS = {
@@ -23,6 +24,7 @@ SUBJECT_LABELS = {
     "data": "Data / Time Series",
     "ondevice": "On-Device AI",
     "llm": "LLM",
+    "rag": "RAG",
 }
 
 # Match problem headings (level 2 only). Keyword can be:
@@ -38,8 +40,7 @@ HEADING_RE = re.compile(
 #   `### <answer code> ## Write Answer`         (기존 레거시)
 #   `### <answer code> ### ## Write Answer`     (ondevice 레거시)
 INLINE_SOLUTION_RE = re.compile(
-    r"###\s*(.+?)\s*(?:###\s*)?(?:###\s*작성\s*필요\s*###|##\s*Write\s*Answer)",
-    re.DOTALL,
+    r"###(?!\s*공개\s*제한)\s*([^\n]+?)\s*(?:###\s*)?(?:###\s*작성\s*필요\s*###|##\s*Write\s*Answer)"
 )
 
 
@@ -132,9 +133,9 @@ def _clean_solution_code(raw_code: str) -> str:
 
 def load_subject(subject: str) -> list[Problem]:
     if subject == "total":
-        # 4개 전 과목의 문제를 합쳐서 반환
+        # 5개 전 과목(Vision, Data, On-Device, LLM, RAG)의 문제를 합쳐서 반환
         total_problems: list[Problem] = []
-        for s in ("vision", "data", "ondevice", "llm"):
+        for s in SUBJECTS:
             total_problems.extend(load_subject(s))
         return total_problems
 

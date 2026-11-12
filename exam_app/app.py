@@ -208,12 +208,12 @@ def _sidebar(subject_keys: list[str]) -> tuple[str, bool]:
 
     col_shuffle, col_seq = st.sidebar.columns(2)
     with col_shuffle:
-        if st.button("🔀 다시 섞기", width="stretch", help="새로운 10문제를 랜덤으로 다시 뽑습니다 (종합은 4개 영역 균등 추출)."):
+        if st.button("🔀 다시 섞기", width="stretch", help=f"새로운 {sess.TEST_PROBLEM_COUNT}문제를 랜덤으로 다시 뽑습니다 (종합은 5개 영역 균등 추출)."):
             sess.reshuffle(subject, problems)
-            st.toast("🔀 새로운 10문제가 랜덤으로 추출되었습니다!", icon="🎲")
+            st.toast(f"🔀 새로운 {sess.TEST_PROBLEM_COUNT}문제가 랜덤으로 추출되었습니다!", icon="🎲")
             st.rerun()
     with col_seq:
-        if st.button("🔢 순서대로", width="stretch", help="앞부분 10문제를 순서대로 정렬합니다."):
+        if st.button("🔢 순서대로", width="stretch", help=f"앞부분 {sess.TEST_PROBLEM_COUNT}문제를 순서대로 정렬합니다."):
             sess.reset_order(subject, problems, full=False)
             st.rerun()
 
@@ -506,8 +506,8 @@ def _main(subject: str, split_view: bool) -> None:
 
 
 def main() -> None:
-    # 'total' (종합)을 첫 번째 옵션으로 제공
-    subjects = ["total", "vision", "data", "ondevice", "llm"]
+    # 'total' (종합)을 첫 번째 옵션으로 제공하며 5개 과목(Vision, Data, On-Device, LLM, RAG) 지원
+    subjects = ["total", "vision", "data", "ondevice", "llm", "rag"]
     subject, split_view = _sidebar(subjects)
     _main(subject, split_view)
 
